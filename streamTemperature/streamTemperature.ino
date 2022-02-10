@@ -17,23 +17,38 @@
    change.
  */
 
+/* DHT11 SENSOR:
+   Temperature and humidity sensor. Relevant specifications:
+    - humidity accuracy is +-5%
+    - temperature accuracy is +-2ºC
+    - resolution is 1 for both entities
+ */
+
+#include "DHT.h"
+
 // LN35 Sensor
 constexpr float BASE_CELSIUS = 9.31;
 constexpr short int measureEvery = 5*60*1000;
 constexpr byte numberOfSamplesAverage = 3;
-
 byte analogPin = 1;
 
+#define DHTPIN 7
+#define DHTTYPE DHT11
+
+DHT dht(DHTPIN, DHTTYPE);
+
 // Data
-float temp35 = 0.0;
-float temp11 = 0.0;
-float humid = 0.0;
+byte temp35 = 0;
+byte temp11 = 0;
+byte humid = 0;
 
 void setup() {
   Serial.begin(9600);
 
   // Setup for LN35 sensor
-  //analogReference(INTERNAL); // change aRef to 1.1V
+  analogReference(INTERNAL); // change aRef to 1.1V
+
+  dht.begin();
   
   pinMode(LED_BUILTIN, OUTPUT);
 }
@@ -45,15 +60,17 @@ void loop() {
   displayDataOnSerial();
 }
 
-void  measureFromLn35InCelsius(float* result) {
-  (*result) = 0.0;
+void  measureFromLn35InCelsius(byte* result) {
+  (*result) = 0;
   for (byte i=0; i<numberOfSamplesAverage; i++) {
     (*result) += analogRead(analogPin)/BASE_CELSIUS;
   }
-  (*result) = (*result)/numberOfSamplesAverage;
+  (*result) = (byte) (*result)/numberOfSamplesAverage;
 }
 
-void measureFromDht11(float* temp, float* hum) {
+void measureFromDht11(byte* temp, byte* hum) {
+  (*temp) = dht.readTemperature();
+  (*hum) = dht.readHumidity();
 }
 
 void activateLedNotification() {
@@ -64,9 +81,11 @@ void activateLedNotification() {
 
 void displayDataOnSerial() {
   Serial.print(temp35);
-  Serial.print(", ");
-  Serial.print(temp11);
-  Serial.print(", ");
-  Serial.print(humid);
+  if (!(isnan(temp11) || isnan(humid))) {
+    Serial.print(", ");
+    Serial.print(temp11);
+    Serial.print(", ");
+    Serial.print(humid);
+  }
   Serial.println();
 }
