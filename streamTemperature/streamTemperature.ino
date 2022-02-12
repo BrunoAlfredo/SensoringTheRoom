@@ -69,8 +69,8 @@ void  measureFromLn35InCelsius(byte* result) {
 }
 
 void measureFromDht11(byte* temp, byte* hum) {
-  (*temp) = dht.readTemperature();
-  (*hum) = dht.readHumidity();
+  (*temp) = (byte) dht.readTemperature();
+  (*hum) = (byte) dht.readHumidity();
 }
 
 void activateLedNotification() {
